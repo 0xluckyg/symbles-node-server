@@ -2,6 +2,8 @@ const request = require("tinyreq");
 const parser = require("xml2js").Parser({explicitArray : false});
 const cheerio = require('cheerio');
 const async = require('async');
+const moment = require('moment');
+const _ = require('lodash');
 
 const baseUrl = "https://www.sec.gov/cgi-bin/browse-edgar";
 const defaultOptions = {
@@ -47,8 +49,8 @@ function parseEntries(entries) {
     async.whilst(() => {
         return index < entries.length;
     }, (next) => {
-        const parsedEntry = parseEntry(entries[index]);
-        if (parsedEntry.form === '4' && parsedEntry.role === 'Reporting') {
+        const parsedEntry = parseEntry(entries[index]);        
+        if (parsedEntry.form === '4' && parsedEntry.role === 'Reporting') {                        
             index++;
             parseForm4Url(parsedEntry, next);
         } else {
@@ -61,8 +63,7 @@ function parseEntries(entries) {
     });
 }
 
-function parseForm4Url(entry, next) {
-    console.log(entry);
+function parseForm4Url(entry, next) {    
     request(entry.url, function (err, body) {
         if (err) {
             console.log('PARSE FORM 4 URL ERROR: ', err);
@@ -71,13 +72,14 @@ function parseForm4Url(entry, next) {
 
         const $ = cheerio.load(body);
         const xmlLinkKey = $('.blueRow a').first().text();
+        // console.log(entry.url);
         const last = entry.url.split('/').pop(-1);
         const parsedUrl = entry.url.replace(last, xmlLinkKey);
-        parseForm4(parsedUrl, next);
+        parseForm4(parsedUrl, entry, next);
     });
 }
 
-function parseForm4(url, next) {
+function parseForm4(url, entry, next) {
     request(url, function (err, body) {
         if (err) {
             console.log('PARSE FORM 4 ERROR: ', err);
@@ -85,18 +87,37 @@ function parseForm4(url, next) {
         }
 
         parser.parseString(body, (err, result) => {
-            filterForm4(result, next);
+            filterForm4(result, entry, url, next);
         });
     });
 }
 
-function filterForm4(form4, next) {
+function filterForm4(form4, entry, url, next) {
     form4 = form4.ownershipDocument;
+
     const company = form4.issuer.issuerName;
     const ticker = form4.issuer.issuerTradingSymbol;
     const reporterTitle = parseReporterTitle(form4);
-    parseDerivative(form4);
-    parseNonDerivative(form4);
+    const cik = entry.cik;
+    const form4Link = entry.url;
+    const accessionNumber = entry.accessionNumber;
+
+    console.log("#######################################", company, form4Link);
+    const derivativeTransaction = parseDerivative(form4);
+    const nonDerivativeTransaction = parseNonDerivative(form4);
+
+    const finalValue = {
+        company, 
+        ticker, 
+        reporterTitle,  
+        derivative: derivativeTransaction,
+        nonDerivative: nonDerivativeTransaction,
+        cik,         
+        accessionNumber,
+        form4Link
+    };
+
+    console.log(finalValue);
 
     next();
 }
@@ -121,10 +142,17 @@ function parseAccessionNumber(entry) {
     return accessionNumber;
 }
 
-function parseReporterTitle(form4) {
-    const relationships = form4.reportingOwner.reportingOwnerRelationship;
-    if (relationships.officerTitle) {
-        return relationships;
+function parseReporterTitle(form4) {    
+
+    let relationships;
+    if (form4.reportingOwner.constructor === Array) {
+        relationships = form4.reportingOwner[0].reportingOwnerRelationship;
+    } else {
+        relationships = form4.reportingOwner.reportingOwnerRelationship;
+    }        
+
+    if (relationships.officerTitle !== undefined && relationships.officerTitle !== '') {
+        return relationships.officerTitle;
     }
 
     if (relationships.isDirector === '1' && relationships.isOfficer === '1') {
@@ -149,27 +177,64 @@ function parseReporterTitle(form4) {
 }
 
 function parseNonDerivative(form4) {
-    if (form4.nonDerivativeTable) {
-        const transactions = form4.nonDerivativeTable.nonDerivativeTransaction;
-        if (transactions.constructor === Array) {
-            transactions.forEach(transaction => {
-                console.log(transaction);
-            });
-        } else {
-
-        }
+    console.log('NONDER');
+    if (form4.nonDerivativeTable) {        
+        const transactions = form4.nonDerivativeTable.nonDerivativeTransaction;                        
+        return extractPurchaseData(transactions);
     }
+    return {};
 }
 
-function parseDerivative(form4) {
-    if (form4.derivativeTable) {
+function parseDerivative(form4) { 
+    console.log('DER');
+    if (form4.derivativeTable) {         
         const transactions = form4.derivativeTable.derivativeTransaction;
-        if (transactions.constructor === Array) {
-            transactions.forEach(transaction => {
-                console.log(transaction);
-            });
-        } else {
+        return extractPurchaseData(transactions);
+    }
+    return {};
+}
 
+function extractPurchaseData(transactions) {
+    if (transactions === undefined) { return; }
+    
+    let transactionSum = {};
+    if (transactions !== undefined && transactions.constructor === Array) {        
+        let numberOfItems = 1;
+        transactions.forEach(transaction => {                                
+            transaction = formatPurchaseData(transaction);                                
+            if (transaction.transactionCode === 'P') {
+                if (_.isEmpty(transactionSum)) {
+                    transactionSum = transaction;
+                    return;
+                }
+                
+                transactionSum.transactionAmount += transaction.transactionAmount;
+                transactionSum.transactionPrice += transaction.transactionPrice;
+            }
+            numberOfItems++;
+        });
+        if (!_.isEmpty(transactionSum)) {
+            transactionSum.transactionPrice = transactionSum.transactionPrice / numberOfItems;
+        }        
+    } else {              
+        if (transactions.transactionCode === 'P') {
+            transactionSum = formatPurchaseData(transactions);
         }
     }
+
+    console.log(transactionSum);
+    return transactionSum;
+}
+
+function formatPurchaseData(transaction) {
+    const securityTitle = transaction.securityTitle.value;//RETURNED
+    let transactionDate = transaction.transactionDate.value;
+    transactionDate = moment(transactionDate, "YYYY-MM-DD");//RETURNED
+    const transactionCode = transaction.transactionCoding.transactionCode;//RETURNED
+    const numberOfShares = parseInt(transaction.transactionAmounts.transactionShares.value);
+    const transactionPrice = parseFloat(transaction.transactionAmounts.transactionPricePerShare.value);
+    const transactionAmount = numberOfShares * transactionPrice;//RETURNED
+    const ownershipNature = transaction.ownershipNature.directOrIndirectOwnership.value;//RETURNED
+
+    return {securityTitle, transactionDate, transactionCode, transactionAmount, transactionPrice, ownershipNature};
 }

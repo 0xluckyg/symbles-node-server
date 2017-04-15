@@ -31,8 +31,12 @@ const Purchase = mongoose.model('Purchase', {
         trim: true,
         minlength: 1
     },
-    date: Date,
-    
+    url: {
+        type: String,
+        required: true,
+        trim: true,
+        minlength: 1
+    },        
     transaction: {
         type: String,
         required: true,
@@ -50,7 +54,8 @@ const Purchase = mongoose.model('Purchase', {
     totalSharesOwned: {
         type: Number,
         min: 1,
-    }
+    },
+    date: Date,
 });
 
 module.exports = {Purchase};
