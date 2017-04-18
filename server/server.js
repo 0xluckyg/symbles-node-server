@@ -6,9 +6,8 @@ const _ = require('lodash');
 const {ObjectID} = require('mongodb');
 const mongoose = require('../db/mongoose');
 const {Purchase} = require('../models/purchase');
-const {User} = require('../models/user');
+const {User} = require('../models/purch');
 const {Ticker} = require('../models/ticker');
-
 
 const port = process.env.PORT;
 

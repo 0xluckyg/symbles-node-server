@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const Purchase = mongoose.model('Purchase', {
-    ticker: mongoose.Schema.Types.ObjectId,
+    ticker: String,
     company: {
         type: String,
         required: true,
@@ -19,21 +19,20 @@ const Purchase = mongoose.model('Purchase', {
         trim: true,
         minlength: 1
     },
-    transaction: {
+    securityTitle: {
         type: String,
-        required: true,
+        trim: true        
+    },
+    transactionCode: {
+        type: String,
+        trim: true
+    },
+    transactionPrice: {
+        type: Number,        
         trim: true,
         minlength: 1
     },
-    sharesTransacted: {
-        type: Number,
-        min: 1,
-    },
-    sharePrice: {
-        type: Number,
-        min: 0,
-    },
-    totalSharesOwned: {
+    transactionAmount: {
         type: Number,
         min: 1,
     },
@@ -51,8 +50,7 @@ const Purchase = mongoose.model('Purchase', {
         minlength: 1
     },
     url: {
-        type: String,
-        required: true,
+        type: String,        
         trim: true,
         minlength: 1
     }     
