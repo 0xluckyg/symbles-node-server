@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const Purchase = mongoose.model('Purchase', {
+const PurchaseSchema = new mongoose.Schema({
     ticker: String,
     company: {
         type: String,
@@ -53,7 +53,14 @@ const Purchase = mongoose.model('Purchase', {
         type: String,        
         trim: true,
         minlength: 1
-    }     
+    }  
 });
+
+PurchaseSchema.index({
+    ticker: 1,
+    reporter: 1
+});
+
+const Purchase = mongoose.model('Purchase', PurchaseSchema);
 
 module.exports = {Purchase};

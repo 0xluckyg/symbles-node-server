@@ -2,7 +2,6 @@
 const moment = require('moment');
 const _ = require('lodash');
 
-const baseUrl = "https://www.sec.gov/cgi-bin/browse-edgar";
 const defaultOptions = {
     owner: "include",
     count: 100,
@@ -12,11 +11,11 @@ const defaultOptions = {
 
 //HELPERS
 //?action=getcurrent&count=100&output=atom&owner=include by default
-function buildQuerystring(options = defaultOptions) {            
+function buildQuerystring(options = defaultOptions, base = baseUrl) {
     const optionsArray = Object.keys(options).map(key => {
         return key + '=' + options[key];
     });
-    return baseUrl + '?' + optionsArray.join('&');
+    return base + '?' + optionsArray.join('&');
 }
 
 function parseEntry(entry) {
@@ -26,11 +25,9 @@ function parseEntry(entry) {
     return Object.assign(formSubjectCikRole, {accessionNumber,url});
 }
 
-function parseTitle(entry) {    
-    console.log(entry);
+function parseTitle(entry) {        
     const regex = /(.+) - ([\w #.,&-\/\\]+) \(([0-9]+)\) \((.+)\)/;
-    const _ = entry.title.match(regex);    
-    console.log(_);
+    const _ = entry.title.match(regex);        
     return {form: _[1], name: _[2], cik: _[3], role: _[4]};
 }
 

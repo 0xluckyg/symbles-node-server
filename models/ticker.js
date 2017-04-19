@@ -2,13 +2,25 @@
 
 const mongoose = require('mongoose');
 
-//Creating a new todo example
-const Ticker = mongoose.model('Ticker', {
+const TickerSchema = new mongoose.Schema({
+    ticker: {
+         type: String,
+         trim: true,
+         required: true
+    },
     updated: Date,
     company: {
         type: String,
+        trim: true,
         required: true
     }
 });
+
+TickerSchema.index({
+    ticker: 1,
+    updated: 1
+});
+
+const Ticker = mongoose.model('Ticker', TickerSchema);
 
 module.exports = {Ticker};
