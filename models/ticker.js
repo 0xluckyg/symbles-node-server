@@ -8,7 +8,9 @@ const TickerSchema = new mongoose.Schema({
          trim: true,
          required: true
     },
-    updated: Date,
+    updated4: Date,
+    updated10K: Date,
+    updated10Q: Date,
     company: {
         type: String,
         trim: true,
@@ -18,7 +20,9 @@ const TickerSchema = new mongoose.Schema({
 
 TickerSchema.index({
     ticker: 1,
-    updated: 1
+    updated4: 1,
+    updated10K: 1,
+    updated10Q: 1
 });
 
 const Ticker = mongoose.model('Ticker', TickerSchema);

@@ -25,6 +25,8 @@ class scraper {
         this.parseForm4Url = this.parseForm4Url.bind(this);
         this.parseForm4 = this.parseForm4.bind(this);
         this.filterForm4 = this.filterForm4.bind(this);
+        this.cacheAndSave = this.cacheAndSave.bind(this);
+        this.save = this.save.bind(this);
     }
 
     scrape(options = {}, baseUrl) {
@@ -90,7 +92,7 @@ class scraper {
 
     filterForm4(form4, entry) {    
         form4 = form4.ownershipDocument;
-
+        // console.log(form4);
         const reporter = entry.name;
         const company = form4.issuer.issuerName;
         const ticker = form4.issuer.issuerTradingSymbol;
@@ -114,23 +116,44 @@ class scraper {
         const finalValueDer = Object.assign(purchaseInformation, derivativeTransaction);
         const finalValueNonDer = Object.assign(purchaseInformation, nonDerivativeTransaction);     
 
-        console.log(finalValueDer);
-
         if (!_.isEmpty(nonDerivativeTransaction)) {        
-            savePurchase(finalValueNonDer);
-            const ticker = {
-                ticker: finalValueDer.ticker,
-                company: finalValueDer.company,
-                updated: finalValueDer.date
-            };
-            saveTicker(ticker);
-            console.log(finalValueNonDer);
+            this.cacheAndSave(finalValueNonDer);            
         }
 
         if (!_.isEmpty(derivativeTransaction)) {
-            savePurchase(finalValueDer);
-            console.log(finalValueDer);
+            this.cacheAndSave(finalValueDer);            
         }
+    }
+
+    cacheAndSave(data) {        
+        let exists = false;
+        for (let i = 0; i < this.cache.length; i++) {
+            if (this.cache[i].accessionNumber === this.cache[i].accessionNumber
+            && this.cache[i].cik === this.cache[i].cik) {  
+                exists = true;       
+                break;
+            }
+        }        
+        if (!exists) {
+            if (this.cache.length >= 100) {
+                this.cache.shift();
+                this.cache.push(data);
+            } else {
+                this.cache.push(data);
+            }
+            this.save(data);
+        }
+    }
+
+    save(data) {        
+        savePurchase(data);
+        const ticker = {
+            ticker: data.ticker,
+            company: data.company,
+            updated: data.date
+        };
+        saveTicker(ticker);
+        console.log(data);
     }
 }
 

@@ -11,11 +11,13 @@ const defaultOptions = {
 
 //HELPERS
 //?action=getcurrent&count=100&output=atom&owner=include by default
-function buildQuerystring(options = defaultOptions, base = baseUrl) {
+function buildQuerystring(options = defaultOptions, base) {    
     const optionsArray = Object.keys(options).map(key => {
         return key + '=' + options[key];
-    });
-    return base + '?' + optionsArray.join('&');
+    });    
+    const url = base + '?' + optionsArray.join('&');
+    console.log(url);
+    return url;
 }
 
 function parseEntry(entry) {
@@ -25,9 +27,9 @@ function parseEntry(entry) {
     return Object.assign(formSubjectCikRole, {accessionNumber,url});
 }
 
-function parseTitle(entry) {        
+function parseTitle(entry) {         
     const regex = /(.+) - ([\w #.,&-\/\\]+) \(([0-9]+)\) \((.+)\)/;
-    const _ = entry.title.match(regex);        
+    const _ = entry.title.match(regex);            
     return {form: _[1], name: _[2], cik: _[3], role: _[4]};
 }
 
@@ -87,7 +89,7 @@ function parseDerivative(form4) {
     return {};
 }
 
-function extractPurchaseData(transactions) {
+function extractPurchaseData(transactions) {    
     if (transactions === undefined) { return; }
     
     let transactionSum = {};
@@ -129,6 +131,39 @@ function formatPurchaseData(transaction) {
     date = moment(date, "YYYY-MM-DD");//RETURNED
 
     return {securityTitle, date, transactionCode, transactionAmount, transactionPrice, ownershipNature};
+}
+
+//PAST SCRAPING
+function parsePastEntry(entry) {
+    
+}
+
+function parsePastTitle(entry) {         
+    
+}
+
+function parsePastAccessionNumber(entry) {
+
+}
+
+function parsePastReporterTitle(form4) {    
+
+}
+
+function parsePastNonDerivative(form4) {
+
+}
+
+function parsePastDerivative(form4) {     
+
+}
+
+function extractPastPurchaseData(transactions) {    
+    
+}
+
+function formatPastPurchaseData(transaction) {
+    
 }
 
 module.exports = {

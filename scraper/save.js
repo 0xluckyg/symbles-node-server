@@ -4,9 +4,13 @@ const {Ticker} = require('../models/ticker');
 const {Purchase} = require('../models/purchase');
 
 function saveTicker(newTicker) {
-    const ticker = new Ticker(newTicker);
-
-    ticker.save();
+    Ticker.update({
+        ticker: newTicker.ticker
+    },
+    newTicker,
+    {
+        upsert: true
+    });
 }
 
 function savePurchase(newPurchase) {

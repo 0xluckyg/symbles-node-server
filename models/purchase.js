@@ -36,6 +36,10 @@ const PurchaseSchema = new mongoose.Schema({
         type: Number,
         min: 1,
     },
+    ownershipNature: {
+        type: String,
+        trim: true
+    },
     date: Date,
     cik: {
         type: String,
