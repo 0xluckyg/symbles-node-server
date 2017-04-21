@@ -106,6 +106,18 @@ function extractPurchaseData(transactions) {
                 transactionSum.transactionAmount += transaction.transactionAmount;
                 transactionSum.transactionPrice += transaction.transactionPrice;
             }
+
+            if (transaction.transactionCode === 'S') {
+                if (_.isEmpty(transactionSum)) {
+                    transactionSum = transaction;
+                    transactionSum.transactionAmount = transactionSum.transactionAmount * -1;
+                    return;
+                }
+                
+                transactionSum.transactionAmount -= transaction.transactionAmount;
+                transactionSum.transactionPrice += transaction.transactionPrice;
+            }
+
             numberOfItems++;
         });
         if (!_.isEmpty(transactionSum)) {
@@ -114,6 +126,11 @@ function extractPurchaseData(transactions) {
     } else {              
         if (transactions.transactionCode === 'P') {
             transactionSum = formatPurchaseData(transactions);
+        }
+
+        if (transactions.transactionCode === 'S') {
+            transactionSum = formatPurchaseData(transactions);
+            transactionSum.transactionAmount = transactionSum.transactionAmount * -1;
         }
     }
 
@@ -131,39 +148,6 @@ function formatPurchaseData(transaction) {
     date = moment(date, "YYYY-MM-DD");//RETURNED
 
     return {securityTitle, date, transactionCode, transactionAmount, transactionPrice, ownershipNature};
-}
-
-//PAST SCRAPING
-function parsePastEntry(entry) {
-    
-}
-
-function parsePastTitle(entry) {         
-    
-}
-
-function parsePastAccessionNumber(entry) {
-
-}
-
-function parsePastReporterTitle(form4) {    
-
-}
-
-function parsePastNonDerivative(form4) {
-
-}
-
-function parsePastDerivative(form4) {     
-
-}
-
-function extractPastPurchaseData(transactions) {    
-    
-}
-
-function formatPastPurchaseData(transaction) {
-    
 }
 
 module.exports = {

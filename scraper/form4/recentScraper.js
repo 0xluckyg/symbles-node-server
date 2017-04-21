@@ -12,8 +12,8 @@ const {
     parseDerivative,
 } = require('./helper');
 const {
-    saveTicker,
-    savePurchase
+    updateTicker4,
+    saveTransaction
 } = require('../save');
 
 class scraper {
@@ -25,6 +25,7 @@ class scraper {
         this.parseForm4Url = this.parseForm4Url.bind(this);
         this.parseForm4 = this.parseForm4.bind(this);
         this.filterForm4 = this.filterForm4.bind(this);
+        this.checkSignificance = this.checkSignificance.bind(this);
         this.cacheAndSave = this.cacheAndSave.bind(this);
         this.save = this.save.bind(this);
     }
@@ -102,7 +103,7 @@ class scraper {
         const derivativeTransaction = parseDerivative(form4);
         const nonDerivativeTransaction = parseNonDerivative(form4);
 
-        const purchaseInformation = {        
+        const transactionInformation = {        
             ticker, 
             company,         
             reporter,
@@ -112,16 +113,35 @@ class scraper {
             url: form4Link
         };
 
-        const finalValueDer = Object.assign(purchaseInformation, derivativeTransaction);
-        const finalValueNonDer = Object.assign(purchaseInformation, nonDerivativeTransaction);             
+        const finalValueDer = Object.assign(transactionInformation, derivativeTransaction);
+        const finalValueNonDer = Object.assign(transactionInformation, nonDerivativeTransaction);             
 
-        if (!_.isEmpty(nonDerivativeTransaction)) {        
+        if (!_.isEmpty(nonDerivativeTransaction) && this.checkSignificance(nonDerivativeTransaction)) {
             this.cacheAndSave(finalValueNonDer);            
         }
-
-        if (!_.isEmpty(derivativeTransaction)) {
-            this.cacheAndSave(finalValueDer);            
+        if (!_.isEmpty(derivativeTransaction) && this.checkSignificance(derivativeTransaction)) {
+            this.cacheAndSave(finalValueDer);
         }
+    }
+
+    checkSignificance(data) {
+        const transactionAmount = Math.abs(data.transactionAmount);
+        if (data.transactionCode === 'S') {
+            if (transactionAmount > 100000) {
+                return true;
+            } else {
+                return false;
+            }            
+        }
+
+        if (data.transactionCode === 'P') {
+            if (transactionAmount > 50000) {
+                return true;
+            } else {
+                return false;
+            }            
+        }
+
     }
 
     cacheAndSave(data) {                
@@ -134,6 +154,8 @@ class scraper {
             }
         }        
         if (!exists) {
+            console.log('GOT');
+            console.log(data);
             if (this.cache.length >= 100) {
                 this.cache.shift();
                 this.cache.push(data);
@@ -145,13 +167,13 @@ class scraper {
     }
 
     save(data) {        
-        savePurchase(data);
+        saveTransaction(data);
         const ticker = {
             ticker: data.ticker,
             company: data.company,
             updated4: data.date
         };
-        saveTicker(ticker);                
+        updateTicker4(ticker);                
     }
 }
 

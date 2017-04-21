@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const PurchaseSchema = new mongoose.Schema({
+const TransactionSchema = new mongoose.Schema({
     ticker: String,
     company: {
         type: String,
@@ -33,8 +33,7 @@ const PurchaseSchema = new mongoose.Schema({
         minlength: 1
     },
     transactionAmount: {
-        type: Number,
-        min: 1,
+        type: Number        
     },
     ownershipNature: {
         type: String,
@@ -60,11 +59,11 @@ const PurchaseSchema = new mongoose.Schema({
     }  
 });
 
-PurchaseSchema.index({
+TransactionSchema.index({
     ticker: 1,
     reporter: 1
 });
 
-const Purchase = mongoose.model('Purchase', PurchaseSchema);
+const Transaction = mongoose.model('Transaction', TransactionSchema);
 
-module.exports = {Purchase};
+module.exports = {Transaction};

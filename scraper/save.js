@@ -1,25 +1,28 @@
 require('../config/config');
 require('../db/mongoose');
 const {Ticker} = require('../models/ticker');
-const {Purchase} = require('../models/purchase');
+const {Transaction} = require('../models/transaction');
 
-function saveTicker(newTicker) {
-    Ticker.update({
+function updateTicker4(newTicker) {
+    console.log(newTicker);
+    Ticker.findOneAndUpdate({
         ticker: newTicker.ticker
     },
     newTicker,
     {
         upsert: true
+    }).then(t => {
+        console.log(t);
     });
 }
 
-function savePurchase(newPurchase) {
-    const purchase = new Purchase(newPurchase);
+function saveTransaction(newTransaction) {
+    const transaction = new Transaction(newTransaction);
 
-    purchase.save();
+    transaction.save();
 }
 
 module.exports = {
-    saveTicker,
-    savePurchase
+    updateTicker4,
+    saveTransaction
 };
