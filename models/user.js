@@ -7,7 +7,13 @@ const bcrypt = require('bcryptjs');
 const _ = require('lodash');
 
 const UserSchema = new mongoose.Schema({
-    name: {
+    firstName: {
+        type: String,
+        required: true,
+        minlength: 1,
+        trim: true
+    },
+    lastName: {
         type: String,
         required: true,
         minlength: 1,
@@ -27,7 +33,7 @@ const UserSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        require: true,
+        required: true,
         minlength: 6,
     },
     phone: {
@@ -38,7 +44,7 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: false
      },
-     watching: [mongoose.Schema.Types.ObjectId],
+    watching: [mongoose.Schema.Types.ObjectId],
     tokens: [{
         access: {
             type: String,
@@ -56,7 +62,7 @@ UserSchema.methods.toJSON = function() {
     const user = this;
     const userObject = user.toObject();
 
-    return _.pick(userObject, ['name', '_id', 'email']);
+    return _.pick(userObject, ['firstName', 'lastName', '_id', 'email']);
 };
 
 UserSchema.methods.generateAuthToken = function() {

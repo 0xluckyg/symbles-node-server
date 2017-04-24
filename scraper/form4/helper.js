@@ -15,8 +15,7 @@ function buildQuerystring(options = defaultOptions, base) {
     const optionsArray = Object.keys(options).map(key => {
         return key + '=' + options[key];
     });    
-    const url = base + '?' + optionsArray.join('&');
-    console.log(url);
+    const url = base + '?' + optionsArray.join('&');    
     return url;
 }
 
@@ -105,6 +104,7 @@ function extractPurchaseData(transactions) {
                 
                 transactionSum.transactionAmount += transaction.transactionAmount;
                 transactionSum.transactionPrice += transaction.transactionPrice;
+                numberOfItems++;
             }
 
             if (transaction.transactionCode === 'S') {
@@ -116,11 +116,10 @@ function extractPurchaseData(transactions) {
                 
                 transactionSum.transactionAmount -= transaction.transactionAmount;
                 transactionSum.transactionPrice += transaction.transactionPrice;
-            }
-
-            numberOfItems++;
+                numberOfItems++;
+            }            
         });
-        if (!_.isEmpty(transactionSum)) {
+        if (!_.isEmpty(transactionSum)) {            
             transactionSum.transactionPrice = transactionSum.transactionPrice / numberOfItems;
         }        
     } else {              
@@ -142,7 +141,7 @@ function formatPurchaseData(transaction) {
     const transactionCode = transaction.transactionCoding.transactionCode;//RETURNED
     const numberOfShares = parseInt(transaction.transactionAmounts.transactionShares.value);
     const transactionPrice = parseFloat(transaction.transactionAmounts.transactionPricePerShare.value);
-    const transactionAmount = numberOfShares * transactionPrice;//RETURNED
+    const transactionAmount = numberOfShares * transactionPrice;//RETURNED    
     const ownershipNature = transaction.ownershipNature.directOrIndirectOwnership.value;//RETURNED
     let date = transaction.transactionDate.value;
     date = moment(date, "YYYY-MM-DD");//RETURNED

@@ -31,15 +31,16 @@ class scraper {
     }
 
     scrape(options = {}, baseUrl) {
-        const queryString = buildQuerystring(options, baseUrl);
+        const queryString = buildQuerystring(options, baseUrl);        
         this.requestFeed(queryString);
     }
 
-    requestFeed(query) {        
+    requestFeed(query) {                
+
         const parseEntries = this.parseEntries;
-        request(query, function (err, body) {
+        request(query, function (err, body) {            
             if (err) {
-                console.log('REQUEST FEED ERROR: ', err);
+                console.log('REQUEST FEED ERROR: ', err, '\nURL: ', query);
                 return;
             }            
             
@@ -67,7 +68,7 @@ class scraper {
         const parseForm4 = this.parseForm4;
         request(entry.url, function (err, body) {
             if (err) {
-                console.log('PARSE FORM 4 URL ERROR: ', err);
+                console.log('PARSE FORM 4 URL ERROR: ', err, '\nURL: ', entry.url);
                 return;
             }        
             const $ = cheerio.load(body);
@@ -82,7 +83,7 @@ class scraper {
         const filterForm4 = this.filterForm4;     
         request(url, function (err, body) {
             if (err) {
-                console.log('PARSE FORM 4 ERROR: ', err);
+                console.log('PARSE FORM 4 ERROR: ', err, "\nURL: ", url);
                 return;
             }        
             parser.parseString(body, (err, result) => {            
@@ -91,8 +92,12 @@ class scraper {
         });
     }
 
-    filterForm4(form4, entry) {
-        form4 = form4.ownershipDocument;        
+    filterForm4(form4, entry) {          
+        if (form4 === undefined || form4.ownershipDocument === undefined) {
+            console.log('FILTER FORM 4 ERROR: ',form4, '\nURL: ', entry.url);
+            return;
+        }
+        form4 = form4.ownershipDocument;
         const reporter = entry.name;
         const company = form4.issuer.issuerName;
         const ticker = form4.issuer.issuerTradingSymbol;
@@ -114,12 +119,18 @@ class scraper {
         };
 
         const finalValueDer = Object.assign(transactionInformation, derivativeTransaction);
-        const finalValueNonDer = Object.assign(transactionInformation, nonDerivativeTransaction);             
+        const finalValueNonDer = Object.assign(transactionInformation, nonDerivativeTransaction);            
+
+        console.log(finalValueDer);
 
         if (!_.isEmpty(nonDerivativeTransaction) && this.checkSignificance(nonDerivativeTransaction)) {
+            finalValueNonDer.transactionAmount = finalValueNonDer.transactionAmount.toFixed(2);
+            finalValueNonDer.transactionPrice = finalValueNonDer.transactionPrice.toFixed(2);
             this.cacheAndSave(finalValueNonDer);            
         }
         if (!_.isEmpty(derivativeTransaction) && this.checkSignificance(derivativeTransaction)) {
+            finalValueDer.transactionAmount = finalValueDer.transactionAmount.toFixed(2);
+            finalValueDer.transactionPrice = finalValueDer.transactionPrice.toFixed(2);    
             this.cacheAndSave(finalValueDer);
         }
     }

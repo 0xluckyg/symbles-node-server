@@ -15,8 +15,15 @@ const newFeedScrapeOptions = {
 };
 
 //https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=4&count=100&owner=include&output=atom
-const newFeedScraper = new RecentScraper();
-newFeedScraper.scrape(newFeedScrapeOptions, newFeedBaseUrl);
-setInterval(() => {    
+function scrape() {
+    const newFeedScraper = new RecentScraper();
     newFeedScraper.scrape(newFeedScrapeOptions, newFeedBaseUrl);
-}, (Math.floor(Math.random() * (fourMinutes - twoMinutes)) + twoMinutes));
+    setInterval(() => {   
+        console.log('SCRAPED!');
+        newFeedScraper.scrape(newFeedScrapeOptions, newFeedBaseUrl);
+    }, (Math.floor(Math.random() * (fourMinutes - twoMinutes)) + twoMinutes));
+}
+
+module.exports = {
+    scrape
+};
