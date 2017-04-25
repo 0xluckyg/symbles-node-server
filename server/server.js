@@ -1,7 +1,6 @@
 require('../config/config');
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors');
 
 const _ = require('lodash');
 const {ObjectID} = require('mongodb');
@@ -22,28 +21,48 @@ const app = express();
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", process.env.CLIENT_URL);
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, X-Auth");
-    res.header("Access-Control-Expose-Headers", "Origin, X-Requested-With, Content-Type, Accept, X-Auth");
+    res.header("Access-Control-Allow-Methods", "PUT, GET, FETCH, POST, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Expose-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     res.header("Access-Control-Allow-Credentials", "true");
     next();
 });
 
 app.use(bodyParser.json());
 
-app.post('/login', (req, res) => {
+app.post('/user/login', (req, res) => {
+    const body = _.pick(req.body, ['email', 'password']);
 
+    User.findByCredentials(body.email, body.password).then((user) => {
+        return user.generateAuthToken().then((token) => {
+            res.send({ token, user });
+        });
+    }).catch((err) => {
+        res.status(400).send(err);
+    });
 });
 
-app.post('/signup', (req, res) => {
+app.post('/user/signup', (req, res) => {
     const user = new User(req.body);
 
     user.save().then(() => {
         return user.generateAuthToken();
-    }).then((token) => {
-        console.log('User', user);
-        res.header('X-Auth', token).send(user);
+    }).then(token => {
+        res.send({ token, user });
     }).catch((err) => {
         res.status(400).send(err);
+    });
+});
+
+app.get('/user/me', (req, res) => {
+    const queryToken = req.query.token;
+    
+    User.findByToken(queryToken)
+    .then(user => {
+        user.removeToken(queryToken);
+        return user.generateAuthToken().then((token) => {
+            res.send({ token, user });
+        });
     });
 });
 
