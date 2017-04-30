@@ -9,7 +9,7 @@ const {User} = require('../models/user');
 const {Ticker} = require('../models/ticker');
 const {scrape} = require('../scraper/form4/scrape');
 
-// scrape();
+scrape();
 
 const port = process.env.PORT;
 
