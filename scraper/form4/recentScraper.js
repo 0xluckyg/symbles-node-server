@@ -138,7 +138,7 @@ class scraper {
     checkSignificance(data) {
         const transactionAmount = Math.abs(data.transactionAmount);
         if (data.transactionCode === 'S') {
-            if (transactionAmount > 100000) {
+            if (transactionAmount > 1000000) {
                 return true;
             } else {
                 return false;
