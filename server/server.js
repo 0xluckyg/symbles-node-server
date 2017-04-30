@@ -1,10 +1,9 @@
 require('../config/config');
+require('../db/mongoose');
 const express = require('express');
 const bodyParser = require('body-parser');
 
 const _ = require('lodash');
-const {ObjectID} = require('mongodb');
-const mongoose = require('../db/mongoose');
 const {Transaction} = require('../models/transaction');
 const {User} = require('../models/user');
 const {Ticker} = require('../models/ticker');
@@ -15,9 +14,6 @@ const {scrape} = require('../scraper/form4/scrape');
 const port = process.env.PORT;
 
 const app = express();
-
-// app.use(cors({origin:true,credentials: true}));
-// app.options('*', cors());
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", process.env.CLIENT_URL);
@@ -67,7 +63,7 @@ app.get('/user/me', (req, res) => {
 });
 
 app.get('/form4', (req, res) => {
-    Ticker.find()
+    Ticker.find().limit(30)
     .sort({updated4:-1})
     .then(tickers => {
         findTransactions(tickers);

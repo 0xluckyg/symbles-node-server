@@ -40,9 +40,9 @@ const UserSchema = new mongoose.Schema({
         type: Number,
         minlength: 8
     },
-    subscribed: {
-        type: Boolean,
-        default: false
+    subscription: {
+        type: Number,
+        default: 0
      },
     watching: [mongoose.Schema.Types.ObjectId],
     tokens: [{
@@ -62,7 +62,7 @@ UserSchema.methods.toJSON = function() {
     const user = this;
     const userObject = user.toObject();
 
-    return _.pick(userObject, ['firstName', 'lastName', '_id', 'email']);
+    return _.pick(userObject, ['firstName', 'lastName', '_id', 'email', 'subscription', 'watching', 'phone']);
 };
 
 UserSchema.methods.generateAuthToken = function() {
