@@ -139,7 +139,12 @@ function extractPurchaseData(transactions) {
 function formatPurchaseData(transaction) {
     const securityTitle = transaction.securityTitle.value;//RETURNED    
     const transactionCode = transaction.transactionCoding.transactionCode;//RETURNED
-    const numberOfShares = parseInt(transaction.transactionAmounts.transactionShares.value);
+    let numberOfShares;
+    if (transaction.transactionAmounts.transactionShares) {
+        numberOfShares = parseInt(transaction.transactionAmounts.transactionShares.value);
+    } else {
+        numberOfShares = transaction.transactionAmounts.transactionTotalValue.value    
+    }    
     const transactionPrice = parseFloat(transaction.transactionAmounts.transactionPricePerShare.value);
     const transactionAmount = numberOfShares * transactionPrice;//RETURNED    
     const ownershipNature = transaction.ownershipNature.directOrIndirectOwnership.value;//RETURNED
